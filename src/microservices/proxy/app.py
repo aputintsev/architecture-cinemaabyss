@@ -4,7 +4,7 @@ import signal
 import sys
 
 import requests
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
@@ -15,11 +15,28 @@ def health():
 @app.get('/api/users')
 def get_users():
     monolith_url: str = os.getenv('MONOLITH_URL', 'http://localhost:8080')
-    r = requests.get(f'{monolith_url}/api/users', headers={'Content-Type': 'application/json'})
-    if r.status_code != 200:
-        return r.json()
-    else:
-        return jsonify([])
+
+    params = request.args.to_dict()
+
+    r = requests.get(
+        f'{monolith_url}/api/users',
+        params=params,
+        headers={'Content-Type': 'application/json'}
+    )
+
+    return jsonify(r.json()), r.status_code
+
+@app.post('/api/users')
+def create_users():
+    monolith_url: str = os.getenv('MONOLITH_URL', 'http://localhost:8080')
+
+    r = requests.post(
+        f'{monolith_url}/api/users',
+        json=request.get_json(),
+        headers={'Content-Type': 'application/json'}
+    )
+
+    return jsonify(r.json()), r.status_code
 
 @app.get('/api/movies')
 def get_movies():
