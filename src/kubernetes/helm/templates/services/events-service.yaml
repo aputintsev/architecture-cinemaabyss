@@ -25,7 +25,47 @@ spec:
     spec:
       containers:
       - name: events-service
-       .... тут
+        image: {{ .Values.eventsService.image.repository }}:{{ .Values.eventsService.image.tag }}
+        imagePullPolicy: {{ .Values.eventsService.image.pullPolicy }}
+        ports:
+          - containerPort: {{ .Values.eventsService.service.targetPort }}
+        env:
+          - name: PORT
+            value: "{{ .Values.eventsService.service.targetPort }}"
+          - name: KAFKA_BROKERS
+            value: "kafka:9092"
+        envFrom:
+          - configMapRef:
+              name: cinemaabyss-config
+          - secretRef:
+              name: cinemaabyss-secrets
+        resources:
+          {{- toYaml .Values.monolith.resources | nindent 10 }}
+        readinessProbe:
+          httpGet:
+            path: /api/events/health
+            port: {{ .Values.eventsService.service.targetPort }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 3
+          timeoutSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /api/events/health
+            port: {{ .Values.eventsService.service.targetPort }}
+          initialDelaySeconds: 45
+          periodSeconds: 20
+          failureThreshold: 3
+          timeoutSeconds: 5
+        startupProbe:
+          httpGet:
+            path: /api/events/health
+            port: {{ .Values.eventsService.service.targetPort }}
+          failureThreshold: 30
+          periodSeconds: 5
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: dockerconfigjson
 ---
 apiVersion: v1
 kind: Service
@@ -37,5 +77,10 @@ metadata:
     app.kubernetes.io/name: {{ include "cinemaabyss.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
- ........ и тут
+  selector:
+    app: events-service
+  ports:
+    - port: {{ .Values.eventsService.service.targetPort }}
+      targetPort: {{ .Values.eventsService.service.targetPort }}
+  type: {{ .Values.eventsService.service.type }}
 {{- end }}

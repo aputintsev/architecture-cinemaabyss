@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: events-service
+  namespace: cinemaabyss
+  labels:
+    app: events-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: events-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: events-service
+    spec:
+      containers:
+        - name: events-service
+          image: ghcr.io/aputintsev/architecture-cinemaabyss/events-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8082
+          env:
+            - name: PORT
+              value: "8082"
+            - name: KAFKA_BROKERS
+              value: "kafka:9092"
+          envFrom:
+            - configMapRef:
+                name: cinemaabyss-config
+            - secretRef:
+                name: cinemaabyss-secrets
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+          readinessProbe:
+            httpGet:
+              path: /api/events/health
+              port: 8082
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/events/health
+              port: 8082
+            initialDelaySeconds: 45
+            periodSeconds: 20
+            failureThreshold: 3
+            timeoutSeconds: 5
+          startupProbe:
+            httpGet:
+              path: /api/events/health
+              port: 8082
+            failureThreshold: 30
+            periodSeconds: 5
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: dockerconfigjson
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: events-service
+  namespace: cinemaabyss
+spec:
+  selector:
+    app: events-service
+  ports:
+    - port: 8082
+      targetPort: 8082
+  type: ClusterIP
