@@ -1,0 +1,95 @@
+@startuml
+title CinemaAbyss Container Diagram
+
+!include <C4/C4_Container>
+'LAYOUT_LANDSCAPE()
+
+Person(user, "User", "Пользователь сервиса")
+Person(admin, "Admin", "Администратор")
+
+Boundary(cinemaAbyssSystem, "CinemaAbyss System") {
+    Boundary(frontend, "Frontend") {
+        Container(mobileApp, "Мобильное приложение", "Пользовательский интерфейс")
+        Container(webApp, "Веб-приложение", "Пользовательский интерфейс")
+        Container(smartTV, "Смарт  ТВ", "Пользовательский интерфейс")
+        Container(backofficeApp, "Веб-приложение администратора", "Административный интерфейс")
+    }
+    Container(apiGateway, "API Gateway", "Балансирует соединения, маршрутизирует вызовы")
+    ContainerQueue(queue, "Очередь событий", "Обеспечивает хранение и отправку событий")
+    Boundary(manageUsers, "Управление пользователями") {
+        Container(usersService, "Управление пользователями", "Создание/редактирование пользователей, редактирование прав")
+        ContainerDb(usersDb, "Users DB", "Хранит пользователей, хэшированные данные для авторизации, логи доступа и т.д.")
+        Container(sessionManagement, "Управление сессией", "Управление пользовательской сессией, контроль доступа")
+        ContainerDb(sessionDb, "Хранилище сессий", "Хранит активные сессии пользователей")
+    }
+    Boundary(managePayments, "Управление платежами") {
+        Container(paymentsService, "payments-service", "Формирует платеж, сохраняет данные о нем")
+        ContainerDb(paymentsDb, "Payments DB", "Хранит платежи")
+    }
+    Boundary(manageMovies, "Управление фильмами") {
+        Container(moviesService, "movies-service", "Создание/редактирование информации о фильмах")
+        ContainerDb(moviesDb, "Movies DB", "Хранит информацию об устройствах")
+    }
+    Boundary(manageSubscriptions, "Управление подписками") {
+        Container(subscriptionsService, "subscriptions-service", "Создание/редактирование подписок")
+        ContainerDb(subscriptionsDb, "Subscriptions DB", "Хранит информацию о подписках")
+    }
+    Boundary(manageDiscounts, "Управление скидками") {
+        Container(discountsService, "discounts-service", "Создание и управление скидками и промокодами")
+        ContainerDb(discountsDb, "Discounts DB", "Хранит информацию о скидках и промокодах")
+    }
+    Boundary(manageRatings, "Управление оценками") {
+        Container(ratingsService, "ratings-service", "Позволяет выставлять и показывать оценки, отправляет их в рекомендательную систему, запрашивает рекомендации")
+        ContainerDb(ratingsDb, "Ratings DB", "Хранит информацию об оценках")
+    }
+}
+Container_Ext(recommendationSystem, "Third-Party Recommendation System", "Сторонняя рекомендательная система")
+Container_Ext(onlineCinema, "Online Cinema", "Внешний видеосервис")
+Container_Ext(paymentSystem, "Платежная система", "Внешняя платежная система")
+
+Rel(admin, backofficeApp, "Авторизуется, администрирует систему")
+Rel(user, mobileApp, "Авторизуется, управляет умным домом, получает уведомления")
+Rel(user, webApp, "Авторизуется, управляет умным домом, получает уведомления")
+Rel(user, smartTV, "Авторизуется, управляет умным домом, получает уведомления")
+
+Rel(mobileApp, apiGateway, "Перенаправляет запросы")
+Rel(webApp, apiGateway, "Перенаправляет запросы")
+Rel(smartTV, apiGateway, "Перенаправляет запросы")
+Rel(backofficeApp, apiGateway, "Перенаправляет запросы")
+
+Rel(apiGateway, usersService, "Создает учетную запись")
+Rel(apiGateway, sessionManagement, "Авторизуется и получает сессию")
+Rel(apiGateway, moviesService, "Выбирает фильмы, отмечает просмотренные")
+Rel(apiGateway, paymentsService, "Просматривает историю платежей")
+Rel(apiGateway, subscriptionsService, "Подписывается/отменяет подписки, выбирает тарифный план")
+Rel(apiGateway, discountsService, "Просматривает и применяет скидки; управляет скидками")
+Rel(apiGateway, ratingsService, "Выставляет и просматривает оценки, получает рекомендации")
+
+Rel(paymentsService, paymentsDb, "Хранит информацию о платежах")
+Rel(paymentsService, paymentSystem, "Производит платеж")
+Rel(paymentsService, queue, "Публикует событие со статусом платежа")
+
+Rel(queue, subscriptionsService, "Читает событие о статусе платежа")
+Rel(subscriptionsService, subscriptionsDb, "Хранит информацию о подписках")
+Rel(discountsService, discountsDb, "Хранит скидки и промокоды")
+
+Rel(moviesService, moviesDb, "Хранит информацию о фильмах")
+Rel(moviesService, queue, "Публикует события о фильмах (изменение статуса, добавление в избранное)")
+Rel(queue, moviesService, "Читает события о фильмах")
+Rel(moviesService, onlineCinema, "Получает ссылку на фильм")
+Rel(moviesService, subscriptionsService, "Проверяет активна ли подписка")
+
+Rel(ratingsService, ratingsDb, "Хранит информацию об оценках")
+Rel(ratingsService, queue, "Отправляет события с информацией об оценках")
+Rel(queue, recommendationSystem, "Читает события об оценках")
+Rel(recommendationSystem, ratingsService, "Читает рекомендации")
+
+Rel(usersService, usersDb, "CRUD users")
+Rel(sessionManagement, usersDb, "Аутентификация и авторизация, хранение журнала доступа")
+Rel(sessionManagement, sessionDb, "Сохраняет/читает пользовательскую сессию")
+
+Rel(subscriptionsService, discountsService, "Проверяет и применяет скидки")
+Rel(subscriptionsService, paymentsService, "Проводит оплату подписки")
+
+SHOW_LEGEND()
+@enduml
