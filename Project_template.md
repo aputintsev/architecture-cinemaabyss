@@ -5,7 +5,9 @@
 1. Спроектируйте to be архитектуру КиноБездны, разделив всю систему на отдельные домены и организовав интеграционное взаимодействие и единую точку вызова сервисов.
 Результат представьте в виде контейнерной диаграммы в нотации С4.
 Добавьте ссылку на файл в этот шаблон
-[ссылка на файл](ссылка)
+
+[Container Diagram](docs/plantuml/ContainerDiagram.puml)  
+![ContainerDiagram](docs/plantuml/ContainerDiagram-CinemaAbyss_Container_Diagram.png)
 
 # Задание 2
 
@@ -58,12 +60,12 @@
 
 Необходимые тесты для проверки этого API вызываются при запуске npm run test:local из папки tests/postman 
 Приложите скриншот тестов и скриншот состояния топиков Kafka из UI http://localhost:8090 
-
-![Скриншот тестов](docs/screenshots/events_test_run.png)
-![Скриншот состояния топиков](docs/screenshots/all_topics_state.png)
-![Скриншот состояния movie-events](docs/screenshots/movie-events_state.png)
-![Скриншот состояния payment-events](docs/screenshots/payment-events_state.png)
-![Скриншот состояния user-events](docs/screenshots/user-events_state.png)
+ 
+![Скриншот тестов](docs/screenshots/events_test_run.png)  
+![Скриншот состояния топиков](docs/screenshots/all_topics_state.png)  
+![Скриншот состояния movie-events](docs/screenshots/movie-events_state.png)  
+![Скриншот состояния payment-events](docs/screenshots/payment-events_state.png)  
+![Скриншот состояния user-events](docs/screenshots/user-events_state.png)  
 
 # Задание 3
 
@@ -281,8 +283,8 @@ cat .docker/config.json | base64
 #### Шаг 3
 Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
 
-[скриншот списка фильмов](docs/screenshots/kubernetes_movies_list.png)
-[скриншот лога events-service](docs/screenshots/events-service_log.png)
+[скриншот списка фильмов](docs/screenshots/kubernetes_movies_list.png)  
+[скриншот лога events-service](docs/screenshots/events-service_log.png)  
 
 # Задание 4
 Для простоты дальнейшего обновления и развертывания вам как архитектуру необходимо так же реализовать helm-чарты для прокси-сервиса и проверить работу 
@@ -358,8 +360,8 @@ minikube tunnel
 https://cinemaabyss.example.com/api/movies
 и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
 
-[скриншот развертывания helm](docs/screenshots/helm_deployment.png)
-[скриншот списка фильмов](docs/screenshots/helm_movies_list.png)
+[скриншот развертывания helm](docs/screenshots/helm_deployment.png)  
+[скриншот списка фильмов](docs/screenshots/helm_movies_list.png)  
 
 ## Удаляем все
 
